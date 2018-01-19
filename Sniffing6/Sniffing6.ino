@@ -8,6 +8,31 @@
 // uint8_t channel = 1;
 unsigned int channel = 1;
 
+// reporting settings
+char reporting_ssid[] = "lab.dev";
+char reporting_pass[] = "devlab123";
+int reporting_timeout_seconds = 10;
+
+
+int report()
+{
+  wifi_promiscuous_enable(disable);
+  Serial.println("Attempting to report");
+  WiFi.begin(reporting_ssid, reporting_pass);
+
+  int elapsed_time = 0;
+  while((WiFi.status() != WL_CONNECTED) && (elapsed_time < reporting_timeout_seconds*1000))
+  {
+    delay(100);
+    elapsed_time+=100;
+    Serial.printf(".");
+  }
+  Serial.println("Connected");
+  WiFi.disconnect();
+  wifi_promiscuous_enable(enable);
+}
+
+
 void setup() {
   Serial.begin(57600);
   Serial.printf("\n\nSDK version:%s\n\r", system_get_sdk_version());
@@ -29,9 +54,14 @@ void loop() {
     if (nothing_new > 200) {
       nothing_new = 0;
       channel++;
-      if (channel == 15) break;             // Only scan channels 1 to 14
+      if (channel == 15)// Only scan channels 1 to 14
+      {
+        report();
+        break;
+      }
       wifi_set_channel(channel);
     }
+    
     delay(1);  // critical processing timeslice for NONOS SDK! No delay(0) yield()
     // Press keyboard ENTER in console with NL active to repaint the screen
     if ((Serial.available() > 0) && (Serial.read() == '\n')) {
@@ -42,4 +72,6 @@ void loop() {
     }
   }
 }
+
+
 
