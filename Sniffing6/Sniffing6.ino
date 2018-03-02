@@ -3,6 +3,8 @@
 #include <ESP8266WiFi.h>
 #include "./functions.h"
 
+
+
 #define disable 0
 #define enable  1
 // uint8_t channel = 1;
@@ -10,8 +12,30 @@ unsigned int channel = 1;
 
 // reporting settings
 char reporting_ssid[] = "lab.dev";
-char reporting_pass[] = "devlab123";
+char reporting_pass[] = "";
 int reporting_timeout_seconds = 10;
+
+int send_data() {
+
+	char * ip = "10.0.0.8";
+	uint32_t port = 30333;
+	WiFiClient con;
+
+	while (!con.connected()) {
+		Serial.printf("Connecting to : %s ", ip);
+		if (con.connect(ip, port)) {
+			Serial.println("Success");
+			break;
+		}
+		Serial.println("Failure");
+		delay(500);
+	}
+
+	con.write("Hey Bud\n");
+	con.flush();
+  con.stop();
+  Serial.println("I'm here");
+}
 
 
 int report()
@@ -28,6 +52,8 @@ int report()
     Serial.printf(".");
   }
   Serial.println("Connected");
+  Serial.println(WiFi.localIP());
+  send_data();
   WiFi.disconnect();
   wifi_promiscuous_enable(enable);
 }
