@@ -103,13 +103,12 @@ void loop() {
     delay(1);  // critical processing timeslice for NONOS SDK! No delay(0) yield()
     // Press keyboard ENTER in console with NL active to repaint the screen
     if ((Serial.available() > 0) && (Serial.read() == '\n')) {
-      Serial.println("\n-------------------------------------------------------------------------------------\n");
+      Serial.println(F("\nType:   /-------MAC------/-----WiFi Access Point SSID-----/  /----MAC---/  Chnl  RSSI"));
+      Serial.println("-------------------------------------------------------------------------------------\n");
       for (int u = 0; u < clients_known_count; u++) print_client(clients_known[u]);
       for (int u = 0; u < aps_known_count; u++) print_beacon(aps_known[u]);
       Serial.println("\n-------------------------------------------------------------------------------------\n");
     }
   }
 }
-
-
 
