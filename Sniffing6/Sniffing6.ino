@@ -19,7 +19,7 @@ int reporting_timeout_seconds = 10;
 int send_data() {
 
 	char * ip = reporting_ip;
-	uint32_t port = 30333;
+	uint32_t port = 30333, connection_tries = 3;
 	WiFiClient con;
 	while (!con.connected()) {
 		Serial.printf("Connecting to : %s ", ip);
@@ -29,6 +29,10 @@ int send_data() {
 		}
 		Serial.println("Failure");
 		delay(500);
+    connection_tries--;
+    if (connection_tries == 0) {
+      return 0;
+    }
 	}
   Serial.println(WiFi.localIP());
 
@@ -60,10 +64,14 @@ int report()
   int elapsed_time = 0;
   while((WiFi.status() != WL_CONNECTED) && (elapsed_time < reporting_timeout_seconds*1000))
   {
-    delay(100);
-    elapsed_time+=100;
+    digitalWrite(D0, HIGH);
+    delay(250);
+    digitalWrite(D0, LOW);
+    delay(250);
     Serial.printf(".");
+    elapsed_time+=500;
   }
+  digitalWrite(D0, LOW);
   Serial.println("Connected");
   send_data();
   WiFi.disconnect();
@@ -72,6 +80,8 @@ int report()
 
 
 void setup() {
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(D0, HIGH);
   Serial.begin(57600);
   Serial.printf("\n\nSDK version:%s\n\r", system_get_sdk_version());
   Serial.println(F("ESP8266 mini-sniff by Ray Burnette http://www.hackster.io/rayburne/projects"));
