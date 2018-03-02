@@ -12,29 +12,41 @@ unsigned int channel = 1;
 
 // reporting settings
 char reporting_ssid[] = "lab.dev";
-char reporting_pass[] = "";
+char reporting_pass[] = "devlab123";
 int reporting_timeout_seconds = 10;
 
 int send_data() {
 
-	char * ip = "10.0.0.8";
+	char * ip = "10.0.0.4";
 	uint32_t port = 30333;
 	WiFiClient con;
-
 	while (!con.connected()) {
 		Serial.printf("Connecting to : %s ", ip);
 		if (con.connect(ip, port)) {
 			Serial.println("Success");
-			break;
+			break;  
 		}
 		Serial.println("Failure");
 		delay(500);
 	}
+  Serial.println(WiFi.localIP());
 
-	con.write("Hey Bud\n");
+      Serial.println("\n-------------------------------------------------------------------------------------\n");
+      for (int u = 0; u < clients_known_count; u++) print_client(clients_known[u]);
+      for (int u = 0; u < aps_known_count; u++) print_beacon(aps_known[u]);
+      Serial.println("\n-------------------------------------------------------------------------------------\n");
+
+  
+  for (int u = 0; u < clients_known_count; u++) connection_print_client(clients_known[u], con);
+  for (int u = 0; u < aps_known_count; u++) connection_print_beacon(aps_known[u], con);
 	con.flush();
   con.stop();
-  Serial.println("I'm here");
+  while(con.status() != 0){
+    yield();
+    if(con.connected()){
+      con.~WiFiClient();
+    }
+  }
 }
 
 
@@ -52,7 +64,6 @@ int report()
     Serial.printf(".");
   }
   Serial.println("Connected");
-  Serial.println(WiFi.localIP());
   send_data();
   WiFi.disconnect();
   wifi_promiscuous_enable(enable);
