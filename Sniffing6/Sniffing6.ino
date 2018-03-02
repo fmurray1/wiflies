@@ -13,11 +13,12 @@ unsigned int channel = 1;
 // reporting settings
 char reporting_ssid[] = "lab.dev";
 char reporting_pass[] = "devlab123";
+char reporting_ip[] = "10.0.0.9";
 int reporting_timeout_seconds = 10;
 
 int send_data() {
 
-	char * ip = "10.0.0.4";
+	char * ip = reporting_ip;
 	uint32_t port = 30333;
 	WiFiClient con;
 	while (!con.connected()) {
@@ -36,7 +37,7 @@ int send_data() {
       for (int u = 0; u < aps_known_count; u++) print_beacon(aps_known[u]);
       Serial.println("\n-------------------------------------------------------------------------------------\n");
 
-  
+  con.println(WiFi.macAddress());
   for (int u = 0; u < clients_known_count; u++) connection_print_client(clients_known[u], con);
   for (int u = 0; u < aps_known_count; u++) connection_print_beacon(aps_known[u], con);
 	con.flush();
