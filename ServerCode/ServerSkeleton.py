@@ -1,5 +1,4 @@
 import socket
-
 #This function just creates a simple TCP listener that prints the data received
 def servListen():
 
@@ -13,7 +12,10 @@ def servListen():
             data += con.recv(4096)
             if len(data) % 4096 != 0:
                 break
-        print(data)
+        try:
+            print(data.decode('utf-8'))
+        except:
+            print('Error: Data received was not UTF-8!\n')
         con.close()
 
 
