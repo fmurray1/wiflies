@@ -83,6 +83,19 @@ void print_beacon(beaconinfo beacon)
   }
 }
 
+void connection_print_beacon(beaconinfo beacon, WiFiClient connection)
+{
+  if (beacon.err != 0) {
+    //Serial.printf("BEACON ERR: (%d)  ", beacon.err);
+  } else {
+    connection.printf("BEACON:[%s]:", beacon.ssid);
+    for (int i = 0; i < 6; i++) connection.printf("%02x", beacon.bssid[i]);
+    connection.printf(":%d:", beacon.channel);
+    connection.printf("%d\r\n", beacon.rssi);
+  }
+}
+
+
 void print_client(clientinfo ci)
 {
   int u = 0;
@@ -111,6 +124,38 @@ void print_client(clientinfo ci)
       for (int i = 0; i < 6; i++) Serial.printf("%02x", ci.ap[i]);
       Serial.printf("  %3d", aps_known[u].channel);
       Serial.printf("   %4d\r\n", ci.rssi);
+    }
+  }
+}
+
+void connection_print_client(clientinfo ci, WiFiClient connection)
+{
+  int u = 0;
+  int known = 0;   // Clear known flag
+  if (ci.err != 0) {
+    // nothing
+  } else {
+    connection.printf("DEVICE:");
+    for (int i = 0; i < 6; i++) connection.printf("%02x", ci.station[i]);
+    connection.printf(":");
+
+    for (u = 0; u < aps_known_count; u++)
+    {
+      if (! memcmp(aps_known[u].bssid, ci.bssid, ETH_MAC_LEN)) {
+        connection.printf("[%s]", aps_known[u].ssid);
+        known = 1;     // AP known => Set known flag
+        break;
+      }
+    }
+
+    if (! known)  {
+      connection.printf("[]\r\n");
+      //  for (int i = 0; i < 6; i++) Serial.printf("%02x", ci.bssid[i]);
+    } else {
+      connection.printf("%s", ":");
+      for (int i = 0; i < 6; i++) connection.printf("%02x", ci.ap[i]);
+      connection.printf(":%d:", aps_known[u].channel);
+      connection.printf("%d\r\n", ci.rssi);
     }
   }
 }
