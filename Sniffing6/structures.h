@@ -182,3 +182,4 @@ struct beaconinfo parse_beacon(uint8_t *frame, uint16_t framelen, signed rssi)
   return bi;
 }
 
+
