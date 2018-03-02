@@ -15,14 +15,16 @@ def readArgs():
 def servListen(cmds):
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind(('',int(cmds['port'])))
     sock.listen()
     while True:
         data = b''
         con, addr = sock.accept()
         while True:
-            data += con.recv(4096)
-            if len(data) % 4096 != 0:
+            new_data = con.recv(4096)
+            data += new_data
+            if len(new_data) == 0:
                 break
         try:
             print(data.decode('utf-8'))
