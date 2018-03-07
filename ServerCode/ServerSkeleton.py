@@ -5,13 +5,15 @@ import matplotlib.pyplot as plt
 import networkx as nx
 from sets import Set
 
+
 class BeaconData(Enum):
     TYPE = 0
     BSSID = 1
     MACADDRESS = 2
     CHANNEL = 3
     RSSI = 4
-    
+
+
 class DeviceData(Enum):
     TYPE = 0
     MACADDRESS = 1
@@ -20,24 +22,28 @@ class DeviceData(Enum):
     CHANNEL = 4
     RSSI = 5
 
+
 G = nx.Graph()
 WiFlyNodes = Set()
-currentFly = 'C0FFEEBEA575'
-deviceDict = {}
-beaconDict = {}
-#This function will read the port off of the command line
-def readArgs():
+current_fly = 'C0FFEEBEA575'
+device_dict = {}
+beacon_dict = {}
 
-    cmds = {'port':0} #this can be expanded as more commands are entered
+
+# This function will read the port off of the command line
+def read_args():
+
+    cmds = {'port': 0}  # this can be expanded as more commands are entered
 
     for i in range(len(sys.argv)):
-        if(sys.argv[i] == '-p'):
+        if sys.argv[i] == '-p':
             cmds['port'] = sys.argv[i+1]
 
     return cmds
 
-#This function just creates a simple TCP listener that prints the data received
-def servListen(cmds):
+
+# This function just creates a simple TCP listener that prints the data received
+def server_listen(cmds):
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -53,68 +59,101 @@ def servListen(cmds):
                 break
         try:
             print("got data")
-            populateGraph(data.decode('utf-8'))
+            populate_graph(data.decode('utf-8'))
         except Exception as e:
             print(e)
         con.close()
 
         
-def buildGraph(deviceDict, beaconDict, currentFly):
+def build_graph(device_dict, beacon_dict, fly):
     
     print('buildGraph')
+
+    WiFlyNodes.add(fly)
+
+    for device, strength in device_dict.iteritems():
+        G.add_edge(current_fly, device, weight=strength)
     
-    WiFlyNodes.update(currentFly)
-    for device, strength in deviceDict.iteritems():
-        G.add_edge(currentFly, device, weight=strength)
-    
-    for beacon, strength in beaconDict.iteritems():
-        G.add_edge(currentFly, beacon, weight=strength)
-        
+    for beacon, strength in beacon_dict.iteritems():
+        G.add_edge(current_fly, beacon, weight=strength)
+
+    print('Wiflies: {}'.format(WiFlyNodes))
+
+    unknown_nodes = Set(device_dict.keys()+beacon_dict.keys()).difference(WiFlyNodes)
+
+    print('Unknown: {}'.format(unknown_nodes))
+
     print(G.edges())
 
-    pos=nx.spring_layout(G)
+    pos = nx.spring_layout(G)
     
-    nx.draw_networkx_nodes(G,pos,node_size=25, node_color="g")
-    nx.draw_networkx_nodes(G,pos,node_list=WiFlyNodes, node_color="b", node_size=150)
+    nx.draw_networkx_nodes(G, pos, nodelist=unknown_nodes, node_size=25, node_color="green")
+    nx.draw_networkx_nodes(G, pos, nodelist=WiFlyNodes, node_color="blue", node_size=150)
    
-    nx.draw_networkx_edges(G,pos, width=.5)
+    nx.draw_networkx_edges(G, pos, width=.5)
     
-    nx.draw_networkx_labels(G,pos,font_size=6,font_family='sans-serif')
+    nx.draw_networkx_labels(G, pos, font_size=6, font_family='sans-serif')
     
     plt.axis('off')
     plt.draw()
-    plt.pause(0.05)
-                   
-def populateGraph(str):
+    plt.pause(50)
+
+  
+def populate_graph(str):
     print('populateGraph')
     ls = str.split('\n')
-    currentFly = ls[0]
-    currentFly = currentFly.replace(':','').lower()
-    print('currentFly: {}'.format(currentFly))
+    global current_fly
+    current_fly = ls[0].replace(':', '').lower()
+    print('current_fly: {}'.format(current_fly))
     for s in ls[1:]:
         s = s.strip().split(':')
         print(s)
         if len(s) >= 4:
             if "DEVICE" in s[DeviceData.TYPE]:
-                deviceDict[s[DeviceData.MACADDRESS]] = s[DeviceData.RSSI]
+                device_dict[s[DeviceData.MACADDRESS]] = s[DeviceData.RSSI]
             elif "BEACON" in s:
-                beaconDict[s[BeaconData.MACADDRESS]] = s[BeaconData.RSSI]
-    print(deviceDict)
-    print(beaconDict)
-    buildGraph(deviceDict, beaconDict, currentFly)
+                beacon_dict[s[BeaconData.MACADDRESS]] = s[BeaconData.RSSI]
+    print(device_dict)
+    print(beacon_dict)
+    build_graph(device_dict, beacon_dict, current_fly)
 
 
 if __name__ == '__main__':
     """
-    test_dict = {'a':-70, 'b':-40}
-    test_beacon = {}
-    buildGraph(test_dict, test_beacon)
+    global current_fly
+    test_dict = {'a': -70, 'b': -40, 'c': -50, 'd': -99}
+    test_beacon = {'e': -55, 'f': -85}
+    build_graph(test_dict, test_beacon, current_fly)
     """
-    cmds = readArgs()
+
+    import random
+    test_str = current_fly + '\n'
+    for c in ['a', 'b', 'c', 'd']:
+
+        temp = ['0'] * 6
+        temp[DeviceData.TYPE] = 'DEVICE'
+        temp[DeviceData.MACADDRESS] = c
+        temp[DeviceData.RSSI] = str(random.randrange(-80, -50))
+        test_str += ':'.join(temp) + '\n'
+
+    for c in ['e', 'f']:
+        temp = ['0'] * 5
+        temp[BeaconData.TYPE] = 'BEACON'
+        temp[BeaconData.MACADDRESS] = c
+        temp[BeaconData.RSSI] = str(random.randrange(-80, -50))
+        test_str += ':'.join(temp) + '\n'
+
+    print(test_str)
+    populate_graph(test_str)
+
+
+    """
+    cmds = read_args()
     if cmds['port'] == 0:
         print("ERROR: No port was passed!\n")
     else:
         print("DEBUG: Listening on port: "+str(cmds['port']))
         plt.ion()
         plt.show()
-        servListen(cmds)
+        server_listen(cmds)
+    """
