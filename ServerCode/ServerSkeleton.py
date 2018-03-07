@@ -125,7 +125,7 @@ if __name__ == '__main__':
     test_beacon = {'e': -55, 'f': -85}
     build_graph(test_dict, test_beacon, current_fly)
     """
-
+    """
     import random
     test_str = current_fly + '\n'
     for c in ['a', 'b', 'c', 'd']:
@@ -156,4 +156,3 @@ if __name__ == '__main__':
         plt.ion()
         plt.show()
         server_listen(cmds)
-    """
