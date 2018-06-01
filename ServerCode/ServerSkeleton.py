@@ -145,8 +145,8 @@ if __name__ == '__main__':
 
 
     """
-    cmds = read_args()
-    print("DEBUG: Listening on port: "+str(cmds.port))
+    args = read_args()
+    print("DEBUG: Listening on port: "+str(args.port))
     plt.ion()
     plt.show()
-    server_listen(cmds)
+    server_listen(args)
