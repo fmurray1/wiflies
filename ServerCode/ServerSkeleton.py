@@ -74,16 +74,18 @@ def build_graph(device_dict, beacon_dict, fly, mac_filter=None):
 
         for beacon, strength in beacon_dict.iteritems():
             G.add_edge(current_fly, beacon, weight=strength)
+
+        unknown_nodes = Set(device_dict.keys() + beacon_dict.keys()).difference(WiFlyNodes)
+
     else:
         if mac_filter in device_dict:
             G.add_edge(current_fly, mac_filter, weight=device_dict.get(mac_filter))
         if mac_filter in beacon_dict:
             G.add_edge(current_fly, mac_filter, weight=beacon_dict.get(mac_filter))
 
+        unknown_nodes = Set(mac_filter)
+
     print('Wiflies: {}'.format(WiFlyNodes))
-
-    unknown_nodes = Set(device_dict.keys()+beacon_dict.keys()).difference(WiFlyNodes)
-
     print('Unknown: {}'.format(unknown_nodes))
 
     print(G.edges())
@@ -102,7 +104,7 @@ def build_graph(device_dict, beacon_dict, fly, mac_filter=None):
     plt.pause(50)
 
   
-def populate_graph(nodes_string, mac_filter):
+def populate_graph(nodes_string, mac_filter=None):
     print('populateGraph')
     nodes_list = nodes_string.split('\n')
     global current_fly
@@ -128,7 +130,7 @@ if __name__ == '__main__':
     test_beacon = {'e': -55, 'f': -85}
     build_graph(test_dict, test_beacon, current_fly)
     """
-    """
+
     import random
     test_str = current_fly + '\n'
     for c in ['a', 'b', 'c', 'd']:
@@ -147,7 +149,7 @@ if __name__ == '__main__':
         test_str += ':'.join(temp) + '\n'
 
     print(test_str)
-    populate_graph(test_str)
+    populate_graph(test_str, 'e')
 
 
     """
@@ -156,3 +158,4 @@ if __name__ == '__main__':
     plt.ion()
     plt.show()
     server_listen(args)
+    """
