@@ -1,5 +1,6 @@
 import socket
 import sys
+import argparse
 from enum import Enum
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -32,22 +33,18 @@ beacon_dict = {}
 
 # This function will read the port off of the command line
 def read_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('port', help='The port for the serer to listen on.')
 
-    cmds = {'port': 0}  # this can be expanded as more commands are entered
-
-    for i in range(len(sys.argv)):
-        if sys.argv[i] == '-p':
-            cmds['port'] = sys.argv[i+1]
-
-    return cmds
+    return parser.parse_args()
 
 
 # This function just creates a simple TCP listener that prints the data received
-def server_listen(cmds):
+def server_listen(args):
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    sock.bind(('',int(cmds['port'])))
+    sock.bind(('', int(args.port)))
     sock.listen(10)
     while True:
         data = b''
@@ -148,11 +145,8 @@ if __name__ == '__main__':
 
 
     """
-    cmds = read_args()
-    if cmds['port'] == 0:
-        print("ERROR: No port was passed!\n")
-    else:
-        print("DEBUG: Listening on port: "+str(cmds['port']))
-        plt.ion()
-        plt.show()
-        server_listen(cmds)
+    args = read_args()
+    print("DEBUG: Listening on port: "+str(args.port))
+    plt.ion()
+    plt.show()
+    server_listen(args)
