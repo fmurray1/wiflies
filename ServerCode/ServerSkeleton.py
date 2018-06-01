@@ -35,6 +35,7 @@ beacon_dict = {}
 def read_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('port', help='The port for the serer to listen on.')
+    parser.add_argument('--filter', help='Filter on a specific mac address')
 
     return parser.parse_args()
 
@@ -56,23 +57,28 @@ def server_listen(args):
                 break
         try:
             print("got data")
-            populate_graph(data.decode('utf-8'))
+            populate_graph(data.decode('utf-8'), args.filter)
         except Exception as e:
             print(e)
         con.close()
 
         
-def build_graph(device_dict, beacon_dict, fly):
+def build_graph(device_dict, beacon_dict, fly, mac_filter=None):
     
     print('buildGraph')
 
     WiFlyNodes.add(fly)
+    if mac_filter is None:
+        for device, strength in device_dict.iteritems():
+            G.add_edge(current_fly, device, weight=strength)
 
-    for device, strength in device_dict.iteritems():
-        G.add_edge(current_fly, device, weight=strength)
-    
-    for beacon, strength in beacon_dict.iteritems():
-        G.add_edge(current_fly, beacon, weight=strength)
+        for beacon, strength in beacon_dict.iteritems():
+            G.add_edge(current_fly, beacon, weight=strength)
+    else:
+        if mac_filter in device_dict:
+            G.add_edge(current_fly, mac_filter, weight=device_dict.get(mac_filter))
+        if mac_filter in beacon_dict:
+            G.add_edge(current_fly, mac_filter, weight=beacon_dict.get(mac_filter))
 
     print('Wiflies: {}'.format(WiFlyNodes))
 
@@ -96,23 +102,23 @@ def build_graph(device_dict, beacon_dict, fly):
     plt.pause(50)
 
   
-def populate_graph(str):
+def populate_graph(nodes_string, mac_filter):
     print('populateGraph')
-    ls = str.split('\n')
+    nodes_list = nodes_string.split('\n')
     global current_fly
-    current_fly = ls[0].replace(':', '').lower()
+    current_fly = nodes_list[0].replace(':', '').lower()
     print('current_fly: {}'.format(current_fly))
-    for s in ls[1:]:
-        s = s.strip().split(':')
-        print(s)
-        if len(s) >= 4:
-            if "DEVICE" in s[DeviceData.TYPE]:
-                device_dict[s[DeviceData.MACADDRESS]] = s[DeviceData.RSSI]
-            elif "BEACON" in s:
-                beacon_dict[s[BeaconData.MACADDRESS]] = s[BeaconData.RSSI]
+    for node_data in nodes_list[1:]:
+        node_data = node_data.strip().split(':')
+        print(node_data)
+        if len(node_data) >= 4:
+            if "DEVICE" in node_data[DeviceData.TYPE]:
+                device_dict[node_data[DeviceData.MACADDRESS]] = node_data[DeviceData.RSSI]
+            elif "BEACON" in node_data:
+                beacon_dict[node_data[BeaconData.MACADDRESS]] = node_data[BeaconData.RSSI]
     print(device_dict)
     print(beacon_dict)
-    build_graph(device_dict, beacon_dict, current_fly)
+    build_graph(device_dict, beacon_dict, current_fly, mac_filter)
 
 
 if __name__ == '__main__':
