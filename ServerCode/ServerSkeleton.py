@@ -26,7 +26,6 @@ class DeviceData(Enum):
 
 G = nx.Graph()
 WiFlyNodes = Set()
-current_fly = 'C0FFEEBEA575'
 device_dict = {}
 beacon_dict = {}
 
@@ -70,18 +69,18 @@ def build_graph(device_dict, beacon_dict, fly, mac_filter=None):
     WiFlyNodes.add(fly)
     if mac_filter is None:
         for device, strength in device_dict.iteritems():
-            G.add_edge(current_fly, device, weight=strength)
+            G.add_edge(fly, device, weight=strength)
 
         for beacon, strength in beacon_dict.iteritems():
-            G.add_edge(current_fly, beacon, weight=strength)
+            G.add_edge(fly, beacon, weight=strength)
 
         unknown_nodes = Set(device_dict.keys() + beacon_dict.keys()).difference(WiFlyNodes)
 
     else:
         if mac_filter in device_dict:
-            G.add_edge(current_fly, mac_filter, weight=device_dict.get(mac_filter))
+            G.add_edge(fly, mac_filter, weight=device_dict.get(mac_filter))
         if mac_filter in beacon_dict:
-            G.add_edge(current_fly, mac_filter, weight=beacon_dict.get(mac_filter))
+            G.add_edge(fly, mac_filter, weight=beacon_dict.get(mac_filter))
 
         unknown_nodes = Set(mac_filter)
 
@@ -107,7 +106,6 @@ def build_graph(device_dict, beacon_dict, fly, mac_filter=None):
 def populate_graph(nodes_string, mac_filter=None):
     print('populateGraph')
     nodes_list = nodes_string.split('\n')
-    global current_fly
     current_fly = nodes_list[0].replace(':', '').lower()
     print('current_fly: {}'.format(current_fly))
     for node_data in nodes_list[1:]:
@@ -125,32 +123,10 @@ def populate_graph(nodes_string, mac_filter=None):
 
 if __name__ == '__main__':
     """
-    global current_fly
     test_dict = {'a': -70, 'b': -40, 'c': -50, 'd': -99}
     test_beacon = {'e': -55, 'f': -85}
     build_graph(test_dict, test_beacon, current_fly)
     """
-
-    import random
-    test_str = current_fly + '\n'
-    for c in ['a', 'b', 'c', 'd']:
-
-        temp = ['0'] * 6
-        temp[DeviceData.TYPE] = 'DEVICE'
-        temp[DeviceData.MACADDRESS] = c
-        temp[DeviceData.RSSI] = str(random.randrange(-80, -50))
-        test_str += ':'.join(temp) + '\n'
-
-    for c in ['e', 'f']:
-        temp = ['0'] * 5
-        temp[BeaconData.TYPE] = 'BEACON'
-        temp[BeaconData.MACADDRESS] = c
-        temp[BeaconData.RSSI] = str(random.randrange(-80, -50))
-        test_str += ':'.join(temp) + '\n'
-
-    print(test_str)
-    populate_graph(test_str, 'e')
-
 
     """
     args = read_args()
